@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>org.kisses</groupId>
+  <artifactId>kisses-core</artifactId>
+  <versioning>
+    <versions>
+      <version>5.0.0.0-SNAPSHOT</version>
+    </versions>
+    <lastUpdated>20161028171757</lastUpdated>
+  </versioning>
+</metadata>
