@@ -1,2 +1,2 @@
 # kissES
-Keep It Sweet and Simple Elasticsearch
+Keep It Sweet and Simple Elasticsearch ORM
