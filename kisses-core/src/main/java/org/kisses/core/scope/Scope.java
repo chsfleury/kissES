@@ -9,6 +9,8 @@ public class Scope {
   private String[] indices;
   private String[] types;
 
+  public Scope() {}
+
   public Scope(String index, String type) {
     setIndices(index);
     setTypes(type);

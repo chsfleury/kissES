@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
@@ -24,6 +25,7 @@ import org.kisses.core.dto.ObjectUpdateResponse;
 import org.kisses.core.mapping.MappingRegistry;
 import org.kisses.core.pagination.Pageable;
 import org.kisses.core.requests.AggregationRequests;
+import org.kisses.core.requests.BulkableRequests;
 import org.kisses.core.requests.CountRequests;
 import org.kisses.core.requests.DeleteRequests;
 import org.kisses.core.requests.GetRequests;
@@ -32,9 +34,11 @@ import org.kisses.core.requests.MappingRequests;
 import org.kisses.core.requests.SearchRequests;
 import org.kisses.core.requests.UpdateRequests;
 import org.kisses.core.scope.Scope;
+import org.kisses.core.source.SourceBuilder;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -44,7 +48,7 @@ import java.util.function.Consumer;
  * @author Charles Fleury
  * @since 27/10/16.
  */
-public class KissES {
+public class Kisses {
 
   public static final int DEFAULT_PORT = 9300;
 
@@ -59,27 +63,26 @@ public class KissES {
   private SearchRequests searchRequests;
   private CountRequests countRequests;
   private AggregationRequests aggregationRequests;
+  private SourceBuilder sourceBuilder;
 
-  public KissES(Client client, String mappingPackage) {
+  public Kisses(Client client, String mappingPackage) {
     this.client = client;
-    ObjectMapper mapper = new ObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
-            .registerModule(new JodaModule())
-            .disable(MapperFeature.CAN_OVERRIDE_ACCESS_MODIFIERS);
+    ObjectMapper mapper = mapper();
 
+    this.sourceBuilder = new SourceBuilder();
     this.mappingRequests = new MappingRequests(client);
     this.mappingRegistry = new MappingRegistry(mappingRequests, mappingPackage);
+    this.mappingRequests.setRegistry(mappingRegistry);
     this.indexRequests = new IndexRequests(client, mappingRegistry, mapper);
     this.updateRequests = new UpdateRequests(client, mappingRegistry, mapper);
     this.getRequests = new GetRequests(client, mappingRegistry, mapper);
     this.deleteRequests = new DeleteRequests(client, mappingRegistry, mapper);
     this.searchRequests = new SearchRequests(client, mappingRegistry, mapper);
-    this.aggregationRequests = new AggregationRequests(client);
+    this.aggregationRequests = new AggregationRequests(client, sourceBuilder);
     this.countRequests = new CountRequests(client);
   }
 
-  public static KissES embedded(String mappingPackage, @Nullable String pathHome) throws NodeValidationException {
+  public static Kisses embedded(String mappingPackage, @Nullable String pathHome) throws NodeValidationException {
     Settings settings = Settings.builder()
             .put("client.type", "node")
             .put("cluster.name", "elasticsearch")
@@ -91,15 +94,19 @@ public class KissES {
 
       Node node = new Node(settings);
       Client client = node.start().client();
-      return new KissES(client, mappingPackage);
+      return new Kisses(client, mappingPackage);
   }
 
-  public static KissES transport(String mappingPackage, String clusterName, String...clusterNodes) throws UnknownHostException {
+  public static Kisses transport(String mappingPackage, String clusterName, String...clusterNodes) throws UnknownHostException {
+    return transport(mappingPackage, clusterName, Arrays.asList(clusterNodes));
+  }
+
+  public static Kisses transport(String mappingPackage, String clusterName, Collection<String> clusterNodes) throws UnknownHostException {
     Settings settings = Settings.builder().put("cluster.name", clusterName).build();
     TransportClient client = new PreBuiltTransportClient(settings);
 
     for (String node : clusterNodes) {
-      String[] nodeParts = node.split(":");
+      String[] nodeParts = node.trim().split(":");
       String nodeAddress = nodeParts[0];
       int port;
       if (nodeParts.length == 1) {
@@ -112,7 +119,15 @@ public class KissES {
       client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(nodeAddress), port));
     }
 
-    return new KissES(client, mappingPackage);
+    return new Kisses(client, mappingPackage);
+  }
+
+  public static ObjectMapper mapper() {
+    return new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
+            .registerModule(new JodaModule())
+            .disable(MapperFeature.CAN_OVERRIDE_ACCESS_MODIFIERS);
   }
 
   public MappingRequests mapping() {
@@ -123,7 +138,7 @@ public class KissES {
     return indexRequests;
   }
 
-  public <T> ObjectIndexResponse index(T entity) {
+  public <T> ObjectIndexResponse<T> index(T entity) {
     return indexRequests.index(entity);
   }
 
@@ -179,12 +194,20 @@ public class KissES {
     return aggregationRequests.aggregate(query, scope, aggs);
   }
 
+  public SourceBuilder source() {
+    return sourceBuilder;
+  }
+
   public CountRequests count() {
     return countRequests;
   }
 
   public long count(QueryBuilder query, Scope scope) {
     return countRequests.count(query, scope);
+  }
+
+  public BulkProcessor bulk(int size) {
+    return BulkableRequests.bulk(client, null).setBulkActions(size).build();
   }
 
   public Client getClient() {

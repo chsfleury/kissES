@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.SearchHit;
@@ -48,13 +49,21 @@ public class SearchRequests {
 
   public <T> ObjectSearchResponse<T> search(QueryBuilder query, Class<T> target, Scope scope, Pageable pageable) {
     return search(
-            client.prepareSearch(scope.getIndices())
-                    .setTypes(scope.getTypes())
-                    .setQuery(query),
+            prepare(scope, query),
             target,
             scope.getTypes().length > 1,
             pageable
     );
+  }
+
+  public SearchRequestBuilder prepare(Scope scope) {
+    return prepare(scope, null);
+  }
+
+  public SearchRequestBuilder prepare(Scope scope, @Nullable QueryBuilder query) {
+    return client.prepareSearch(scope.getIndices())
+            .setTypes(scope.getTypes())
+            .setQuery(query);
   }
 
   public <T> ObjectSearchResponse<T> search(SearchRequestBuilder request, Class<T> target, boolean dynamicMapping, Pageable pageable) {
@@ -74,9 +83,7 @@ public class SearchRequests {
 
   public <T> void forEach(QueryBuilder query, Class<T> target, Scope scope, Consumer<T> consumer) {
     forEach(
-            client.prepareSearch(scope.getIndices())
-                    .setTypes(scope.getTypes())
-                    .setQuery(query),
+            prepare(scope, query),
             target,
             scope.getTypes().length > 1,
             consumer
@@ -98,9 +105,7 @@ public class SearchRequests {
 
   public <T> ObjectScrollResponse<T> scroll(QueryBuilder query, Class<T> target, Scope scope, long millis) {
     return scroll(
-            client.prepareSearch(scope.getIndices())
-                    .setTypes(scope.getTypes())
-                    .setQuery(query),
+            prepare(scope, query),
             target,
             scope.getTypes().length > 1,
             millis

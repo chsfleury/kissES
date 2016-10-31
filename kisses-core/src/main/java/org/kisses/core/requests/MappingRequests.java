@@ -6,6 +6,7 @@ import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.client.Client;
 import org.kisses.core.dto.CreateMappingResponse;
 import org.kisses.core.mapping.DocumentMapping;
+import org.kisses.core.mapping.MappingRegistry;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -20,9 +21,18 @@ import static org.elasticsearch.client.Requests.indicesExistsRequest;
 public class MappingRequests {
 
   private Client client;
+  private MappingRegistry registry;
 
   public MappingRequests(Client client) {
     this.client = client;
+  }
+
+  public void setRegistry(MappingRegistry registry) {
+    this.registry = registry;
+  }
+
+  public <T> DocumentMapping<T> get(Class<T> entityClass) {
+    return registry.get(entityClass);
   }
 
   public boolean exists(DocumentMapping mapping) {

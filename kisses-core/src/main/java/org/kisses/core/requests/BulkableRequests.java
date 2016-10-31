@@ -44,6 +44,10 @@ public abstract class BulkableRequests {
   protected abstract <T> ActionRequestBuilder prepare(T entity, DocumentMapping mapping);
 
   protected BulkProcessor.Builder createBulk(@Nullable BulkProcessor.Listener listener) {
+    return bulk(client, listener);
+  }
+
+  public static BulkProcessor.Builder bulk(Client client, @Nullable BulkProcessor.Listener listener) {
     if(listener == null) {
       listener = new BulkProcessor.Listener() {
         @Override

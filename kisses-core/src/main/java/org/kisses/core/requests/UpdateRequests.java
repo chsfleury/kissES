@@ -1,6 +1,7 @@
 package org.kisses.core.requests;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
@@ -38,6 +39,10 @@ public class UpdateRequests extends BulkableRequests {
     return update(prepare(entity, newFieldMap), entity);
   }
 
+  public <T> void update(T entity, Map<String, Object> newFieldMap, BulkProcessor bulk) {
+    bulk.add(prepare(entity, newFieldMap).request());
+  }
+
   public <T> ObjectUpdateResponse<T> update(T entity, DocumentMapping<T> mapping) {
     return update(prepare(entity, mapping), entity);
   }
@@ -45,6 +50,11 @@ public class UpdateRequests extends BulkableRequests {
   public <T> ObjectUpdateResponse<T> update(T entity, DocumentMapping<T> mapping, Map<String, Object> newFieldMap) {
     return update(prepare(entity, mapping, newFieldMap), entity);
   }
+
+  public <T> void update(T entity, DocumentMapping<T> mapping, Map<String, Object> newFieldMap, BulkProcessor bulk) {
+    bulk.add(prepare(entity, mapping, newFieldMap).request());
+  }
+
 
   public <T> void update(Collection<T> entities) {
     bulk(entities);

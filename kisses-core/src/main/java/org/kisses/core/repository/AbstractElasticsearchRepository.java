@@ -1,10 +1,11 @@
 package org.kisses.core.repository;
 
+import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
-import org.kisses.core.KissES;
+import org.kisses.core.Kisses;
 import org.kisses.core.dto.ObjectIndexResponse;
 import org.kisses.core.dto.ObjectSearchResponse;
 import org.kisses.core.dto.ObjectUpdateResponse;
@@ -26,10 +27,18 @@ import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
  */
 public class AbstractElasticsearchRepository<T> implements ElasticsearchRepository<T> {
 
-  protected KissES es;
+  protected Kisses es;
   protected DocumentMapping<T> mapping;
+  private Class<T> entityClass;
 
-  public AbstractElasticsearchRepository(KissES es, Class<T> entityClass) {
+  public AbstractElasticsearchRepository(Kisses es, Class<T> entityClass) {
+    this.entityClass = entityClass;
+    if(es != null) {
+      setEs(es);
+    }
+  }
+
+  protected void setEs(Kisses es) {
     this.es = es;
     this.mapping = es.getMappingRegistry().get(entityClass);
   }
@@ -55,6 +64,16 @@ public class AbstractElasticsearchRepository<T> implements ElasticsearchReposito
   }
 
   @Override
+  public List<T> scroll(QueryBuilder query) {
+    if(count(query) >= Integer.MAX_VALUE) {
+      throw new IllegalStateException("too many elements");
+    }
+    List<T> results = new ArrayList<>();
+    forEach(query, results::add);
+    return results;
+  }
+
+  @Override
   public void forEach(Consumer<T> consumer) {
     forEach(matchAllQuery(), consumer);
   }
@@ -75,6 +94,11 @@ public class AbstractElasticsearchRepository<T> implements ElasticsearchReposito
   }
 
   @Override
+  public void index(T entity, BulkProcessor bulk) {
+    es.index().index(entity, mapping, bulk);
+  }
+
+  @Override
   public void index(Collection<T> entities) {
     es.index().index(entities, mapping);
   }
@@ -87,6 +111,11 @@ public class AbstractElasticsearchRepository<T> implements ElasticsearchReposito
   @Override
   public ObjectUpdateResponse<T> update(T entity, Map<String, Object> newFieldMap) {
     return es.update().update(entity, mapping, newFieldMap);
+  }
+
+  @Override
+  public void update(T entity, Map<String, Object> newFieldMap, BulkProcessor bulk) {
+    es.update().update(entity, mapping, newFieldMap, bulk);
   }
 
   @Override

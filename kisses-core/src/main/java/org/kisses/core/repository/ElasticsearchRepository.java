@@ -1,5 +1,6 @@
 package org.kisses.core.repository;
 
+import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -27,17 +28,20 @@ public interface ElasticsearchRepository<T> {
 
   // SEARCH AND SCROLL
   List<T> findAll();
+  List<T> scroll(QueryBuilder query);
   void forEach(Consumer<T> consumer);
   void forEach(QueryBuilder query, Consumer<T> consumer);
   ObjectSearchResponse<T> search(QueryBuilder query, Pageable pageable);
 
   // INDEX
   ObjectIndexResponse<T> index(T entity);
+  void index(T entity, BulkProcessor bulk);
   void index(Collection<T> entities);
 
   // UPDATE
   ObjectUpdateResponse<T> update(T entity);
   ObjectUpdateResponse<T> update(T entity, Map<String, Object> newFieldMap);
+  void update(T entity, Map<String, Object> newFieldMap, BulkProcessor bulk);
   void update(Collection<T> entities);
 
   // DELETE

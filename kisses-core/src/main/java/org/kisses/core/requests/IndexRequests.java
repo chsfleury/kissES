@@ -2,6 +2,7 @@ package org.kisses.core.requests;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
@@ -29,6 +30,11 @@ public class IndexRequests extends BulkableRequests {
       return index(entity, mapping);
   }
 
+  public <T> void index(T entity, BulkProcessor bulk) {
+    DocumentMapping mapping = mappingRegistry.get(entity.getClass());
+    index(entity, mapping, bulk);
+  }
+
   public <T> ObjectIndexResponse<T> index(T entity, DocumentMapping<T> mapping) {
     try {
       IndexResponse indexResponse = prepare(entity, mapping).get();
@@ -39,6 +45,10 @@ public class IndexRequests extends BulkableRequests {
     } catch (IllegalAccessException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public <T> void index(T entity, DocumentMapping<T> mapping, BulkProcessor bulk) {
+    bulk.add(prepare(entity, mapping).request());
   }
 
   public <T> void index(Collection<T> entities) {

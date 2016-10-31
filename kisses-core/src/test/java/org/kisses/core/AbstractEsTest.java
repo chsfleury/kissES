@@ -19,12 +19,12 @@ import java.nio.file.attribute.BasicFileAttributes;
 public class AbstractEsTest {
 
   protected static Path pathHome;
-  protected static KissES es;
+  protected static Kisses es;
 
   @BeforeClass
   public static void init() throws NodeValidationException {
     pathHome = Paths.get("/tmp/kisses");
-    es = KissES.embedded("org.kisses.core", pathHome.toString());
+    es = Kisses.embedded("org.kisses.core", pathHome.toString());
   }
 
   @AfterClass
