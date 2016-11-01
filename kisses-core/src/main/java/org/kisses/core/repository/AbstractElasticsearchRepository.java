@@ -5,6 +5,9 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.suggest.Suggest;
+import org.elasticsearch.search.suggest.SuggestBuilder;
+import org.elasticsearch.search.suggest.SuggestionBuilder;
 import org.kisses.core.Kisses;
 import org.kisses.core.dto.ObjectIndexResponse;
 import org.kisses.core.dto.ObjectSearchResponse;
@@ -141,6 +144,16 @@ public class AbstractElasticsearchRepository<T> implements ElasticsearchReposito
   @Override
   public Map<String, Aggregation> aggregate(QueryBuilder query, Collection<AggregationBuilder> aggs) {
     return es.aggregate(query, mapping.getScope(), aggs);
+  }
+
+  @Override
+  public List<String> suggest(SuggestionBuilder<?> suggestion, String text) {
+    return es.suggest(mapping.getScope(), suggestion, text);
+  }
+
+  @Override
+  public Suggest suggest(SuggestBuilder suggest) {
+    return es.suggest().suggest(mapping.getScope(), suggest);
   }
 
   @Override

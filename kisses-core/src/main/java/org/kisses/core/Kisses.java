@@ -16,6 +16,7 @@ import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeValidationException;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.suggest.SuggestionBuilder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.kisses.core.dto.ObjectGetResponse;
 import org.kisses.core.dto.ObjectIndexResponse;
@@ -32,6 +33,7 @@ import org.kisses.core.requests.GetRequests;
 import org.kisses.core.requests.IndexRequests;
 import org.kisses.core.requests.MappingRequests;
 import org.kisses.core.requests.SearchRequests;
+import org.kisses.core.requests.SuggestRequests;
 import org.kisses.core.requests.UpdateRequests;
 import org.kisses.core.scope.Scope;
 import org.kisses.core.source.SourceBuilder;
@@ -40,6 +42,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -63,6 +66,7 @@ public class Kisses {
   private SearchRequests searchRequests;
   private CountRequests countRequests;
   private AggregationRequests aggregationRequests;
+  private SuggestRequests suggestRequests;
   private SourceBuilder sourceBuilder;
 
   public Kisses(Client client, String mappingPackage) {
@@ -79,6 +83,7 @@ public class Kisses {
     this.deleteRequests = new DeleteRequests(client, mappingRegistry, mapper);
     this.searchRequests = new SearchRequests(client, mappingRegistry, mapper);
     this.aggregationRequests = new AggregationRequests(client, sourceBuilder);
+    this.suggestRequests = new SuggestRequests(searchRequests);
     this.countRequests = new CountRequests(client);
   }
 
@@ -192,6 +197,14 @@ public class Kisses {
 
   public Map<String, Aggregation> aggregate(QueryBuilder query, Scope scope, Collection<AggregationBuilder> aggs) {
     return aggregationRequests.aggregate(query, scope, aggs);
+  }
+
+  public SuggestRequests suggest() {
+    return suggestRequests;
+  }
+
+  public List<String> suggest(Scope scope, SuggestionBuilder<?> suggestion, String text) {
+    return suggestRequests.suggest(scope, suggestion, text);
   }
 
   public SourceBuilder source() {

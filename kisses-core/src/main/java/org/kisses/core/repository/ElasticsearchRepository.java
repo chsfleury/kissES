@@ -5,6 +5,9 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.suggest.Suggest;
+import org.elasticsearch.search.suggest.SuggestBuilder;
+import org.elasticsearch.search.suggest.SuggestionBuilder;
 import org.kisses.core.dto.ObjectIndexResponse;
 import org.kisses.core.dto.ObjectSearchResponse;
 import org.kisses.core.dto.ObjectUpdateResponse;
@@ -51,6 +54,10 @@ public interface ElasticsearchRepository<T> {
   // AGG
   Aggregation aggregate(QueryBuilder query, AggregationBuilder agg);
   Map<String, Aggregation> aggregate(QueryBuilder query, Collection<AggregationBuilder> aggs);
+
+  // SUGGEST
+  List<String> suggest(SuggestionBuilder<?> suggestion, String text);
+  Suggest suggest(SuggestBuilder suggest);
 
   // COUNT
   long count();
