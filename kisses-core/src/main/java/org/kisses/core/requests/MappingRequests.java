@@ -4,7 +4,6 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.client.Client;
-import org.kisses.core.dto.CreateMappingResponse;
 import org.kisses.core.mapping.DocumentMapping;
 import org.kisses.core.mapping.MappingRegistry;
 
@@ -35,17 +34,22 @@ public class MappingRequests {
     return registry.get(entityClass);
   }
 
-  public boolean exists(DocumentMapping mapping) {
-    return client.admin().indices().exists(indicesExistsRequest(mapping.getIndex())).actionGet().isExists()
-            && !client.admin().indices().prepareGetMappings(mapping.getIndex()).setTypes(mapping.getType()).get().getMappings().isEmpty();
+  public boolean indexExists(DocumentMapping mapping) {
+    return client.admin().indices().exists(indicesExistsRequest(mapping.getIndex())).actionGet().isExists();
   }
 
-  public CreateMappingResponse create(DocumentMapping mapping) throws IOException {
+  public boolean mappingExists(DocumentMapping mapping) {
+    return !client.admin().indices().prepareGetMappings(mapping.getIndex()).setTypes(mapping.getType()).get().getMappings().isEmpty();
+  }
+
+  public CreateIndexResponse createIndex(DocumentMapping mapping) throws IOException {
     String settings = readFile(mapping.getIndexSettingsFile());
-    CreateIndexResponse createIndexResponse = client.admin().indices().prepareCreate(mapping.getIndex()).setSettings(settings).get();
+    return client.admin().indices().prepareCreate(mapping.getIndex()).setSettings(settings).get();
+  }
+
+  public PutMappingResponse createMapping(DocumentMapping mapping) throws IOException {
     String mappingSource = readFile(mapping.getTypeMappingFile());
-    PutMappingResponse putMappingResponse = client.admin().indices().preparePutMapping(mapping.getIndex()).setType(mapping.getType()).setSource(mappingSource).get();
-    return new CreateMappingResponse(createIndexResponse, putMappingResponse);
+    return client.admin().indices().preparePutMapping(mapping.getIndex()).setType(mapping.getType()).setSource(mappingSource).get();
   }
 
   public DeleteIndexResponse delete(DocumentMapping mapping) {
@@ -53,8 +57,9 @@ public class MappingRequests {
   }
 
   public void clear(DocumentMapping mapping) throws IOException {
-    if(exists(mapping) && delete(mapping).isAcknowledged()) {
-      create(mapping);
+    if(indexExists(mapping) && delete(mapping).isAcknowledged()) {
+      createIndex(mapping);
+      createMapping(mapping);
     }
   }
 

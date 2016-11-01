@@ -70,8 +70,15 @@ public class MappingRegistry {
     classByType.put(mapping.type(), mappingClass);
 
     try {
-      map.create(documentMapping);
-      LOG.info("create mapping of {}", mappingClass.getSimpleName());
+      if(!map.indexExists(documentMapping)) {
+        map.createIndex(documentMapping);
+        LOG.info("create index of {}", mappingClass.getSimpleName());
+      }
+
+      if(!map.mappingExists(documentMapping)) {
+        map.createMapping(documentMapping);
+        LOG.info("create mapping of {}", mappingClass.getSimpleName());
+      }
     } catch (IOException e) {
       LOG.error("Cannot register " + documentMapping.getIndex(), e);
     }
