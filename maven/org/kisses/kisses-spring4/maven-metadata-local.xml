@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <metadata>
   <groupId>org.kisses</groupId>
-  <artifactId>kisses-core</artifactId>
+  <artifactId>kisses-spring4</artifactId>
   <versioning>
     <versions>
       <version>5.0.0.0-SNAPSHOT</version>
     </versions>
-    <lastUpdated>20161102094943</lastUpdated>
+    <lastUpdated>20161102094945</lastUpdated>
   </versioning>
 </metadata>
