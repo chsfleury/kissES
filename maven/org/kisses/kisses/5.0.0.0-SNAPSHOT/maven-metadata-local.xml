@@ -1,23 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <metadata modelVersion="1.1.0">
   <groupId>org.kisses</groupId>
-  <artifactId>kisses-core</artifactId>
+  <artifactId>kisses</artifactId>
   <version>5.0.0.0-SNAPSHOT</version>
   <versioning>
     <snapshot>
       <localCopy>true</localCopy>
     </snapshot>
-    <lastUpdated>20161102104605</lastUpdated>
+    <lastUpdated>20161102104603</lastUpdated>
     <snapshotVersions>
-      <snapshotVersion>
-        <extension>jar</extension>
-        <value>5.0.0.0-SNAPSHOT</value>
-        <updated>20161102104605</updated>
-      </snapshotVersion>
       <snapshotVersion>
         <extension>pom</extension>
         <value>5.0.0.0-SNAPSHOT</value>
-        <updated>20161102104605</updated>
+        <updated>20161102104603</updated>
       </snapshotVersion>
     </snapshotVersions>
   </versioning>
