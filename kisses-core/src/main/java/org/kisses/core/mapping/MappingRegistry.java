@@ -1,6 +1,7 @@
 package org.kisses.core.mapping;
 
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
+import io.github.lukehutch.fastclasspathscanner.MatchProcessorException;
 import org.elasticsearch.ElasticsearchException;
 import org.kisses.annotations.Id;
 import org.kisses.annotations.Mapping;
@@ -80,10 +81,9 @@ public class MappingRegistry {
         map.createMapping(documentMapping);
         LOG.info("create mapping of {}", mappingClass.getSimpleName());
       }
-    } catch (IOException e) {
+    } catch (Exception e) {
       LOG.error("Cannot register " + documentMapping.getIndex(), e);
-    } catch (ElasticsearchException e) {
-      throw new RuntimeException("Error while create " + mappingClass.getSimpleName() + " index or mapping", e);
+      throw new RuntimeException("Error while create " + mappingClass.getSimpleName() + " index or mapping, caused by " + e.getMessage(), e);
     }
   }
 
