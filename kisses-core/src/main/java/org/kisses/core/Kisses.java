@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import org.elasticsearch.action.admin.indices.analyze.AnalyzeResponse;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.client.Client;
@@ -26,6 +27,7 @@ import org.kisses.core.dto.ObjectUpdateResponse;
 import org.kisses.core.mapping.MappingRegistry;
 import org.kisses.core.pagination.Pageable;
 import org.kisses.core.requests.AggregationRequests;
+import org.kisses.core.requests.AnalyzeRequests;
 import org.kisses.core.requests.BulkableRequests;
 import org.kisses.core.requests.CountRequests;
 import org.kisses.core.requests.DeleteRequests;
@@ -67,6 +69,7 @@ public class Kisses {
   private CountRequests countRequests;
   private AggregationRequests aggregationRequests;
   private SuggestRequests suggestRequests;
+  private AnalyzeRequests analyzeRequests;
   private SourceBuilder sourceBuilder;
 
   public Kisses(Client client, String mappingPackage) {
@@ -85,6 +88,7 @@ public class Kisses {
     this.aggregationRequests = new AggregationRequests(client, sourceBuilder);
     this.suggestRequests = new SuggestRequests(searchRequests);
     this.countRequests = new CountRequests(client);
+    this.analyzeRequests = new AnalyzeRequests(client);
   }
 
   public static Kisses embedded(String mappingPackage, @Nullable String pathHome) throws NodeValidationException {
@@ -197,6 +201,14 @@ public class Kisses {
 
   public Map<String, Aggregation> aggregate(QueryBuilder query, Scope scope, Collection<AggregationBuilder> aggs) {
     return aggregationRequests.aggregate(query, scope, aggs);
+  }
+
+  public AnalyzeRequests analyze() {
+    return analyzeRequests;
+  }
+
+  public AnalyzeResponse analyze(String index, String analyzer, String text) {
+    return analyzeRequests.analyze(index, analyzer, text);
   }
 
   public SuggestRequests suggest() {
