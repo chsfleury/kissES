@@ -4,6 +4,7 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.client.Client;
+import org.kisses.annotations.Analyzer;
 import org.kisses.core.mapping.DocumentMapping;
 import org.kisses.core.mapping.MappingRegistry;
 
@@ -45,6 +46,11 @@ public class MappingRequests {
   public CreateIndexResponse createIndex(DocumentMapping mapping) throws IOException {
     String settings = readFile(mapping.getIndexSettingsFile());
     return client.admin().indices().prepareCreate(mapping.getIndex()).setSettings(settings).get();
+  }
+
+  public CreateIndexResponse createIndex(Analyzer analyzer) throws IOException {
+    String settings = readFile(analyzer.settings());
+    return client.admin().indices().prepareCreate(analyzer.name()).setSettings(settings).get();
   }
 
   public PutMappingResponse createMapping(DocumentMapping mapping) throws IOException {

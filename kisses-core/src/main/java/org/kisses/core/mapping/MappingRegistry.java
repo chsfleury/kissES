@@ -1,8 +1,7 @@
 package org.kisses.core.mapping;
 
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
-import io.github.lukehutch.fastclasspathscanner.MatchProcessorException;
-import org.elasticsearch.ElasticsearchException;
+import org.kisses.annotations.Analyzer;
 import org.kisses.annotations.Id;
 import org.kisses.annotations.Mapping;
 import org.kisses.core.requests.MappingRequests;
@@ -30,7 +29,10 @@ public class MappingRegistry {
     mappingByClass = new HashMap<>();
     classByType = new HashMap<>();
     map = mappingRequests;
-    new FastClasspathScanner(packagePath).matchClassesWithAnnotation(Mapping.class, this::registerClass).scan();
+    new FastClasspathScanner(packagePath)
+            .matchClassesWithAnnotation(Mapping.class, this::registerClass)
+            .matchClassesWithAnnotation(Analyzer.class, this::registerAnalyzer)
+            .scan();
   }
 
   public <T> DocumentMapping<T> get(Class<T> entityClass) {
@@ -39,6 +41,18 @@ public class MappingRegistry {
 
   public Class<?> get(String type) {
     return classByType.get(type);
+  }
+
+  private void registerAnalyzer(Class<?> analyzerClass) {
+    Analyzer analyzer = analyzerClass.getAnnotation(Analyzer.class);
+    if(analyzer != null) {
+      try {
+        map.createIndex(analyzer);
+      } catch (IOException e) {
+        LOG.error("Cannot register analyzer " + analyzer.name(), e);
+        throw new RuntimeException("Error while create " + analyzerClass.getSimpleName() + " index or mapping, caused by " + e.getMessage(), e);
+      }
+    }
   }
 
   private <T> void registerClass(Class<T> mappingClass) {
