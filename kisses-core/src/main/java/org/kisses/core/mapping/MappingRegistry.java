@@ -47,7 +47,9 @@ public class MappingRegistry {
     Analyzer analyzer = analyzerClass.getAnnotation(Analyzer.class);
     if(analyzer != null) {
       try {
-        map.createIndex(analyzer);
+        if(!map.indexExists(analyzer.name())) {
+          map.createIndex(analyzer);
+        }
       } catch (IOException e) {
         LOG.error("Cannot register analyzer " + analyzer.name(), e);
         throw new RuntimeException("Error while create " + analyzerClass.getSimpleName() + " index or mapping, caused by " + e.getMessage(), e);

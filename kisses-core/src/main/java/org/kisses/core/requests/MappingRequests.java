@@ -36,7 +36,11 @@ public class MappingRequests {
   }
 
   public boolean indexExists(DocumentMapping mapping) {
-    return client.admin().indices().exists(indicesExistsRequest(mapping.getIndex())).actionGet().isExists();
+    return indexExists(mapping.getIndex());
+  }
+
+  public boolean indexExists(String name) {
+    return client.admin().indices().exists(indicesExistsRequest(name)).actionGet().isExists();
   }
 
   public boolean mappingExists(DocumentMapping mapping) {
