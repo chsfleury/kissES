@@ -43,7 +43,7 @@ public class MappingRegistry {
     return classByType.get(type);
   }
 
-  private void registerAnalyzer(Class<?> analyzerClass) {
+  private <T> void registerAnalyzer(Class<T> analyzerClass) {
     Analyzer analyzer = analyzerClass.getAnnotation(Analyzer.class);
     if(analyzer != null) {
       try {
