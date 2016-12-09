@@ -6,6 +6,8 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.suggest.Suggest;
+import org.elasticsearch.search.suggest.Suggest.Suggestion;
+import org.elasticsearch.search.suggest.Suggest.Suggestion.Entry;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.SuggestionBuilder;
 import org.kisses.core.dto.ObjectIndexResponse;
@@ -58,6 +60,7 @@ public interface ElasticsearchRepository<T> {
   // SUGGEST
   List<String> suggest(SuggestionBuilder<?> suggestion, String text);
   Suggest suggest(SuggestBuilder suggest);
+  Suggestion<? extends Entry> suggest(SuggestionBuilder<?> suggestion);
 
   // COUNT
   long count();

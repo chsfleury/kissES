@@ -6,6 +6,8 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.suggest.Suggest;
+import org.elasticsearch.search.suggest.Suggest.Suggestion;
+import org.elasticsearch.search.suggest.Suggest.Suggestion.Entry;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.SuggestionBuilder;
 import org.kisses.core.Kisses;
@@ -154,6 +156,11 @@ public class AbstractElasticsearchRepository<T> implements ElasticsearchReposito
   @Override
   public Suggest suggest(SuggestBuilder suggest) {
     return es.suggest().suggest(mapping.getScope(), suggest);
+  }
+
+  @Override
+  public Suggestion<? extends Entry> suggest(SuggestionBuilder<?> suggestion) {
+    return es.suggest().suggest(mapping.getScope(), suggestion);
   }
 
   @Override
