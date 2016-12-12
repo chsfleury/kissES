@@ -5,6 +5,7 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.suggest.Suggest;
 import org.elasticsearch.search.suggest.Suggest.Suggestion;
 import org.elasticsearch.search.suggest.Suggest.Suggestion.Entry;
@@ -89,8 +90,8 @@ public class AbstractElasticsearchRepository<T> implements ElasticsearchReposito
   }
 
   @Override
-  public ObjectSearchResponse<T> search(QueryBuilder query, Pageable pageable) {
-    return es.search().search(query, mapping, pageable);
+  public ObjectSearchResponse<T> search(QueryBuilder query, Pageable pageable, SortBuilder... sorts) {
+    return es.search().search(query, mapping, pageable, sorts);
   }
 
   @Override

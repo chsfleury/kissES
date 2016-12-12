@@ -9,6 +9,7 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.kisses.core.dto.ObjectScrollResponse;
 import org.kisses.core.dto.ObjectSearchResponse;
@@ -43,13 +44,21 @@ public class SearchRequests {
     this.mapper = mapper;
   }
 
-  public <T> ObjectSearchResponse<T> search(QueryBuilder query, DocumentMapping<T> mapping, Pageable pageable) {
+  public <T> ObjectSearchResponse<T> search(QueryBuilder query, DocumentMapping<T> mapping, Pageable pageable, SortBuilder...sorts) {
     return search(query, mapping.getDocumentClass(), mapping.getScope(), pageable);
   }
 
-  public <T> ObjectSearchResponse<T> search(QueryBuilder query, Class<T> target, Scope scope, Pageable pageable) {
+  public <T> ObjectSearchResponse<T> search(QueryBuilder query, Class<T> target, Scope scope, Pageable pageable, SortBuilder...sorts) {
+    SearchRequestBuilder request = prepare(scope, query);
+
+    if(sorts != null) {
+      for(SortBuilder sort : sorts) {
+        request.addSort(sort);
+      }
+    }
+
     return search(
-            prepare(scope, query),
+            request,
             target,
             scope.getTypes().length > 1,
             pageable
