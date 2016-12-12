@@ -2,6 +2,7 @@ package org.kisses.core.repository;
 
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
@@ -12,6 +13,7 @@ import org.elasticsearch.search.suggest.Suggest.Suggestion.Entry;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.SuggestionBuilder;
 import org.kisses.core.dto.ObjectIndexResponse;
+import org.kisses.core.dto.ObjectMultiSearchResponse;
 import org.kisses.core.dto.ObjectSearchResponse;
 import org.kisses.core.dto.ObjectUpdateResponse;
 import org.kisses.core.pagination.Pageable;
@@ -38,6 +40,8 @@ public interface ElasticsearchRepository<T> {
   void forEach(Consumer<T> consumer);
   void forEach(QueryBuilder query, Consumer<T> consumer);
   ObjectSearchResponse<T> search(QueryBuilder query, Pageable pageable, SortBuilder...sorts);
+  ObjectMultiSearchResponse<T> multiSearch(Pageable pageable, QueryBuilder...queries);
+  ObjectMultiSearchResponse<T> multiSearch(Pageable pageable, SearchRequestBuilder...requests);
 
   // INDEX
   ObjectIndexResponse<T> index(T entity);

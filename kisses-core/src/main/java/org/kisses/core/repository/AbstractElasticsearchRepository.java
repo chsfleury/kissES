@@ -2,6 +2,7 @@ package org.kisses.core.repository;
 
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
@@ -13,6 +14,7 @@ import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.SuggestionBuilder;
 import org.kisses.core.Kisses;
 import org.kisses.core.dto.ObjectIndexResponse;
+import org.kisses.core.dto.ObjectMultiSearchResponse;
 import org.kisses.core.dto.ObjectSearchResponse;
 import org.kisses.core.dto.ObjectUpdateResponse;
 import org.kisses.core.mapping.DocumentMapping;
@@ -92,6 +94,16 @@ public class AbstractElasticsearchRepository<T> implements ElasticsearchReposito
   @Override
   public ObjectSearchResponse<T> search(QueryBuilder query, Pageable pageable, SortBuilder... sorts) {
     return es.search().search(query, mapping, pageable, sorts);
+  }
+
+  @Override
+  public ObjectMultiSearchResponse<T> multiSearch(Pageable pageable, QueryBuilder... queries) {
+    return es.search().multi(mapping, pageable, queries);
+  }
+
+  @Override
+  public ObjectMultiSearchResponse<T> multiSearch(Pageable pageable, SearchRequestBuilder... requests) {
+    return es.search().multi(mapping, pageable, requests);
   }
 
   @Override

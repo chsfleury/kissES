@@ -1,6 +1,8 @@
 package org.kisses.core.requests;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.elasticsearch.action.search.MultiSearchRequestBuilder;
+import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
@@ -11,6 +13,7 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
+import org.kisses.core.dto.ObjectMultiSearchResponse;
 import org.kisses.core.dto.ObjectScrollResponse;
 import org.kisses.core.dto.ObjectSearchResponse;
 import org.kisses.core.dto.ObjectSearchResult;
@@ -20,11 +23,18 @@ import org.kisses.core.pagination.Pageable;
 import org.kisses.core.pagination.impl.DefaultPage;
 import org.kisses.core.pagination.impl.PageRequest;
 import org.kisses.core.scope.Scope;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 
 /**
  * @author Charles Fleury
@@ -32,6 +42,7 @@ import java.util.function.Consumer;
  */
 public class SearchRequests {
 
+  public static final Logger LOGGER = LoggerFactory.getLogger(SearchRequests.class);
   protected static final long DEFAULT_KEEP_CONTEXT = 15000;
 
   private Client client;
@@ -77,8 +88,7 @@ public class SearchRequests {
 
   public <T> ObjectSearchResponse<T> search(SearchRequestBuilder request, Class<T> target, boolean dynamicMapping, Pageable pageable) {
     try {
-      request.setSize(pageable.getPageSize()).setFrom(pageable.getOffset());
-      SearchResponse searchResponse = request.get();
+      SearchResponse searchResponse = apply(request, pageable).get();
       List<ObjectSearchResult<T>> content = convert(searchResponse.getHits(), target, dynamicMapping);
       return new ObjectSearchResponse<>(searchResponse, new DefaultPage<>(content, pageable, searchResponse.getHits().getTotalHits()));
     } catch (IOException | IllegalAccessException e) {
@@ -145,6 +155,48 @@ public class SearchRequests {
     }
   }
 
+  public <T> ObjectMultiSearchResponse<T> multi(DocumentMapping<T> mapping, Pageable pageable, QueryBuilder...queries) {
+    return multi(mapping, pageable, asList(queries));
+  }
+
+  public <T> ObjectMultiSearchResponse<T> multi(DocumentMapping<T> mapping, Pageable pageable, List<QueryBuilder> queries) {
+    List<SearchRequestBuilder> requests = queries.stream().map(query -> prepare(mapping.getScope(), query)).collect(toList());
+    return multi(mapping.getDocumentClass(), mapping.getScope().getTypes().length > 1, pageable, requests);
+  }
+
+  public <T> ObjectMultiSearchResponse<T> multi(DocumentMapping<T> mapping, Pageable pageable, SearchRequestBuilder...requests) {
+    return multi(mapping.getDocumentClass(), mapping.getScope().getTypes().length > 1, pageable, asList(requests));
+  }
+
+  public <T> ObjectMultiSearchResponse<T> multi(Class<T> target, boolean dynamicMapping, Pageable pageable, SearchRequestBuilder...requests) {
+    return multi(target, dynamicMapping, pageable, asList(requests));
+  }
+
+  public <T> ObjectMultiSearchResponse<T> multi(Class<T> target, boolean dynamicMapping, Pageable pageable, List<SearchRequestBuilder> requests) {
+    MultiSearchRequestBuilder multiRequest = client.prepareMultiSearch();
+    for(SearchRequestBuilder request : requests) {
+      multiRequest.add(apply(request, pageable));
+    }
+
+    MultiSearchResponse response = multiRequest.get();
+    List<ObjectSearchResponse<T>> results = new ArrayList<>(requests.size());
+    for(MultiSearchResponse.Item item : response.getResponses()) {
+      if(!item.isFailure()) {
+        try {
+          SearchResponse subResponse = item.getResponse();
+          List<ObjectSearchResult<T>> content = convert(subResponse.getHits(), target, dynamicMapping);
+          results.add(new ObjectSearchResponse<>(subResponse, new DefaultPage<>(content, pageable, subResponse.getHits().getTotalHits())));
+        } catch (IOException | IllegalAccessException e) {
+          LOGGER.error("Multisearch error", e);
+        }
+      } else {
+        LOGGER.error("Multisearch error : " + item.getFailureMessage(), item.getFailure());
+      }
+    }
+
+    return new ObjectMultiSearchResponse<>(response, results);
+  }
+
   private <T> List<ObjectSearchResult<T>> convert(SearchHits hits, Class<T> targetClass, boolean dynamicMapping) throws IOException, IllegalAccessException {
     List<ObjectSearchResult<T>> list = new ArrayList<>(hits.getHits().length);
     DocumentMapping documentMapping = null;
@@ -164,5 +216,9 @@ public class SearchRequests {
       list.add(result);
     }
     return list;
+  }
+
+  private SearchRequestBuilder apply(SearchRequestBuilder request, Pageable pageable) {
+    return pageable == null ? request : request.setSize(pageable.getPageSize()).setFrom(pageable.getOffset());
   }
 }
