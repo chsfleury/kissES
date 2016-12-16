@@ -7,6 +7,7 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.stats.ClusterStatsResponse;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeResponse;
+import org.elasticsearch.action.admin.indices.stats.IndicesStatsResponse;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.client.Client;
@@ -241,12 +242,16 @@ public class Kisses {
     return client;
   }
 
-  public ClusterHealthResponse health() {
+  public ClusterHealthResponse clusterHealth() {
     return client.admin().cluster().prepareHealth().get();
   }
 
-  public ClusterStatsResponse stats() {
+  public ClusterStatsResponse clusterStats() {
     return client.admin().cluster().prepareClusterStats().get();
+  }
+
+  public IndicesStatsResponse indicesStats() {
+    return client.admin().indices().prepareStats().get();
   }
 
   public MappingRegistry getMappingRegistry() {
