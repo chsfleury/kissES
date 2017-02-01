@@ -35,6 +35,10 @@ public class UpdateRequests extends BulkableRequests {
     return update(prepare(entity), entity);
   }
 
+  public <T> ObjectUpdateResponse<T> update(Object id, T entity) {
+    return update(prepare(id, entity), entity);
+  }
+
   public <T> ObjectUpdateResponse<T> update(T entity, Map<String, Object> newFieldMap) {
     return update(prepare(entity, newFieldMap), entity);
   }
@@ -82,9 +86,19 @@ public class UpdateRequests extends BulkableRequests {
     return prepare(entity, mapping);
   }
 
+  public <T> UpdateRequestBuilder prepare(Object id, T entity) {
+    DocumentMapping mapping = mappingRegistry.get(entity.getClass());
+    return prepare(id, entity, mapping);
+  }
+
   public <T> UpdateRequestBuilder prepare(T entity, DocumentMapping mapping) {
     Map newFieldMap = mapper.convertValue(entity, Map.class);
     return prepare(entity, mapping, newFieldMap);
+  }
+
+  public <T> UpdateRequestBuilder prepare(Object id, T entity, DocumentMapping mapping) {
+    Map newFieldMap = mapper.convertValue(entity, Map.class);
+    return prepare(id, entity, mapping, newFieldMap);
   }
 
   public <T> UpdateRequestBuilder prepare(T entity, Map newFieldMap) {
@@ -93,13 +107,16 @@ public class UpdateRequests extends BulkableRequests {
   }
 
   public <T> UpdateRequestBuilder prepare(T entity, DocumentMapping mapping, Map newFieldMap) {
+    return prepare(null, entity, mapping, newFieldMap);
+  }
+
+  public <T> UpdateRequestBuilder prepare(Object id, T entity, DocumentMapping mapping, Map newFieldMap) {
     try {
       if (mapping == null) {
         throw new IllegalArgumentException("not a managed type : " + entity.getClass().getName());
       }
 
       String idFieldName = null;
-      Object id = null;
       if (mapping.getIdField() != null) {
         idFieldName = mapping.getIdField().getName();
         id = mapping.getIdField().get(entity);
