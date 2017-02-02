@@ -22,8 +22,6 @@ import java.util.Map;
  */
 public class UpdateRequests extends BulkableRequests {
 
-  private Client client;
-  private MappingRegistry mappingRegistry;
   private ObjectMapper mapper;
 
   public UpdateRequests(Client client, MappingRegistry mappingRegistry, ObjectMapper mapper) {
