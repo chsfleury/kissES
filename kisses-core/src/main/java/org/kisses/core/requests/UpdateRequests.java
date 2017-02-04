@@ -37,6 +37,10 @@ public class UpdateRequests extends BulkableRequests {
     return update(prepare(id, entity), entity);
   }
 
+  public <T> void update(Object id, T entity, BulkProcessor bulk) {
+    bulk.add(prepare(id, entity).request());
+  }
+
   public <T> ObjectUpdateResponse<T> update(T entity, Map<String, Object> newFieldMap) {
     return update(prepare(entity, newFieldMap), entity);
   }
